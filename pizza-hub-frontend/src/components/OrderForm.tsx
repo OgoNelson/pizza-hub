@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
+import type { OrderData } from "../types";
 import "../styles/OrderForm.css";
-
-/* ================= TYPES ================= */
 
 interface FormData {
   fullName: string;
@@ -14,11 +13,6 @@ interface FormData {
   deliveryAddress: string;
 }
 
-interface PreviewData extends FormData {
-  unitPrice: number;
-  totalPrice: number;
-}
-
 interface Errors {
   fullName?: string;
   phone?: string;
@@ -26,9 +20,11 @@ interface Errors {
   deliveryAddress?: string;
 }
 
-/* ================= COMPONENT ================= */
+interface OrderFormProps {
+  onPreview: (data: OrderData) => void;
+}
 
-const OrderForm: React.FC = () => {
+const OrderForm: React.FC<OrderFormProps> = ({ onPreview }) => {
   const [formData, setFormData] = useState<FormData>({
     fullName: "",
     phone: "",
@@ -39,7 +35,6 @@ const OrderForm: React.FC = () => {
     deliveryAddress: "",
   });
 
-  const [previewData, setPreviewData] = useState<PreviewData | null>(null);
   const [errors, setErrors] = useState<Errors>({});
 
   const pizzaTypes = [
@@ -51,8 +46,6 @@ const OrderForm: React.FC = () => {
   ];
 
   const pizzaSizes = ["Small", "Medium", "Large"];
-
-  /* ================= HELPERS ================= */
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -77,15 +70,10 @@ const OrderForm: React.FC = () => {
     const newErrors: Errors = {};
 
     if (!formData.fullName.trim()) newErrors.fullName = "Full name is required";
-
     if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
-
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    if (!formData.email.trim()) newErrors.email = "Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
       newErrors.email = "Invalid email address";
-    }
-
     if (!formData.deliveryAddress.trim())
       newErrors.deliveryAddress = "Delivery address is required";
 
@@ -93,82 +81,28 @@ const OrderForm: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const formatPrice = (price: number): string =>
-    new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-    }).format(price);
-
-  /* ================= API CALLS ================= */
-
   const handlePreview = async () => {
     if (!validateForm()) return;
 
     try {
-      const response = await axios.post<PreviewData>(
+      const response = await axios.post<OrderData>(
         "http://localhost:3000/api/orders/preview",
         formData
       );
-      setPreviewData(response.data);
+
+      onPreview(response.data);
     } catch (error) {
       console.error("Preview error:", error);
     }
   };
-
-  const handlePayment = async () => {
-    if (!previewData) return;
-
-    try {
-      const response = await axios.post<{
-        data: {
-          public_key: string;
-          reference: string;
-        };
-      }>("http://localhost:3000/api/payment/init", previewData);
-
-      initializePaystackPopup(response.data.data, previewData);
-    } catch (error) {
-      console.error("Payment init error:", error);
-      alert("Payment initialization failed");
-    }
-  };
-
-  /* ================= PAYSTACK ================= */
-
-  const initializePaystackPopup = (
-    paymentData: { public_key: string; reference: string },
-    orderData: PreviewData
-  ) => {
-    const handler = (window as any).PaystackPop.setup({
-      key: paymentData.public_key,
-      email: orderData.email,
-      amount: orderData.totalPrice * 100,
-      currency: "NGN",
-      ref: paymentData.reference,
-      callback: (response: any) => {
-        if (response.status === "success") {
-          alert("Payment successful 🎉");
-        }
-      },
-      onClose: () => {
-        alert("Payment cancelled");
-      },
-    });
-
-    handler.openIframe();
-  };
-
-  /* ================= JSX ================= */
 
   return (
     <div className="order-form-container">
       <h1>Pizza Order Form</h1>
 
       <div className="form-grid">
-        {/* Customer Info */}
         <div className="form-section">
           <h2>Customer Information</h2>
-
           <input
             type="text"
             name="fullName"
@@ -176,7 +110,7 @@ const OrderForm: React.FC = () => {
             value={formData.fullName}
             onChange={handleChange}
           />
-          {errors.fullName && <span>{errors.fullName}</span>}
+          {errors.fullName && <span className="error">{errors.fullName}</span>}
 
           <input
             type="tel"
@@ -185,7 +119,7 @@ const OrderForm: React.FC = () => {
             value={formData.phone}
             onChange={handleChange}
           />
-          {errors.phone && <span>{errors.phone}</span>}
+          {errors.phone && <span className="error">{errors.phone}</span>}
 
           <input
             type="email"
@@ -194,7 +128,7 @@ const OrderForm: React.FC = () => {
             value={formData.email}
             onChange={handleChange}
           />
-          {errors.email && <span>{errors.email}</span>}
+          {errors.email && <span className="error">{errors.email}</span>}
 
           <textarea
             name="deliveryAddress"
@@ -202,20 +136,22 @@ const OrderForm: React.FC = () => {
             value={formData.deliveryAddress}
             onChange={handleChange}
           />
-          {errors.deliveryAddress && <span>{errors.deliveryAddress}</span>}
+          {errors.deliveryAddress && (
+            <span className="error">{errors.deliveryAddress}</span>
+          )}
         </div>
 
-        {/* Pizza Details */}
         <div className="form-section">
           <h2>Pizza Details</h2>
-
           <select
             name="pizzaType"
             value={formData.pizzaType}
             onChange={handleChange}
           >
             {pizzaTypes.map((type) => (
-              <option key={type}>{type}</option>
+              <option key={type} value={type}>
+                {type}
+              </option>
             ))}
           </select>
 
@@ -245,34 +181,6 @@ const OrderForm: React.FC = () => {
       <div className="action-buttons">
         <button onClick={handlePreview}>Preview Order</button>
       </div>
-
-      {previewData && (
-        <div className="order-preview">
-          <h2>Order Preview</h2>
-
-          <p>
-            <strong>Name:</strong> {previewData.fullName}
-          </p>
-          <p>
-            <strong>Email:</strong> {previewData.email}
-          </p>
-          <p>
-            <strong>Pizza:</strong> {previewData.pizzaType}
-          </p>
-          <p>
-            <strong>Size:</strong> {previewData.pizzaSize}
-          </p>
-          <p>
-            <strong>Quantity:</strong> {previewData.quantity}
-          </p>
-          <p>
-            <strong>Total:</strong> {formatPrice(previewData.totalPrice)}
-          </p>
-
-          <button onClick={handlePayment}>Proceed to Payment</button>
-          <button onClick={() => setPreviewData(null)}>Cancel</button>
-        </div>
-      )}
     </div>
   );
 };

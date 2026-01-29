@@ -1,6 +1,6 @@
-
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import "../styles/AdminDashboard.css";
 
 interface Order {
   _id: string;
@@ -36,37 +36,43 @@ const AdminDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
+    const token = localStorage.getItem("adminToken");
     if (!token) {
-      window.location.href = '/admin/login';
+      window.location.href = "/admin/login";
       return;
     }
 
     const fetchOrders = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/admin/orders', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          "http://localhost:3000/api/admin/orders",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         setOrders(response.data.data);
       } catch (err) {
-        console.error('Error fetching orders:', err);
-        setError('Failed to fetch orders');
+        console.error("Error fetching orders:", err);
+        setError("Failed to fetch orders");
       }
     };
 
     const fetchStats = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/admin/stats', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          "http://localhost:3000/api/admin/stats",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         setStats(response.data.data);
       } catch (err) {
-        console.error('Error fetching stats:', err);
-        setError('Failed to fetch statistics');
+        console.error("Error fetching stats:", err);
+        setError("Failed to fetch statistics");
       }
     };
 
@@ -76,63 +82,73 @@ const AdminDashboard: React.FC = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminInfo');
-    window.location.href = '/admin/login';
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("adminInfo");
+    window.location.href = "/admin/login";
   };
 
   const handleUpdateDeliveryStatus = async (orderId: string) => {
     try {
-      const token = localStorage.getItem('adminToken');
-      await axios.patch(`http://localhost:3000/api/admin/orders/${orderId}/deliver`, {}, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      
+      const token = localStorage.getItem("adminToken");
+      await axios.patch(
+        `http://localhost:3000/api/admin/orders/${orderId}/deliver`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       // Refresh orders after update
-      const response = await axios.get('http://localhost:3000/api/admin/orders', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.get(
+        "http://localhost:3000/api/admin/orders",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       setOrders(response.data.data);
     } catch (err) {
-      console.error('Error updating delivery status:', err);
-      setError('Failed to update delivery status');
+      console.error("Error updating delivery status:", err);
+      setError("Failed to update delivery status");
     }
   };
 
   const handleDeleteOrder = async (orderId: string) => {
-    if (!window.confirm('Are you sure you want to delete this order?')) {
+    if (!window.confirm("Are you sure you want to delete this order?")) {
       return;
     }
 
     try {
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem("adminToken");
       await axios.delete(`http://localhost:3000/api/admin/orders/${orderId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      
+
       // Refresh orders after deletion
-      const response = await axios.get('http://localhost:3000/api/admin/orders', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.get(
+        "http://localhost:3000/api/admin/orders",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       setOrders(response.data.data);
     } catch (err) {
-      console.error('Error deleting order:', err);
-      setError('Failed to delete order');
+      console.error("Error deleting order:", err);
+      setError("Failed to delete order");
     }
   };
 
   const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
     }).format(price);
   };
 
@@ -152,9 +168,9 @@ const AdminDashboard: React.FC = () => {
           </button>
         </div>
       </header>
-      
+
       {error && <div className="error-message">{error}</div>}
-      
+
       <div className="dashboard-content">
         <div className="stats-section">
           <h2>Order Statistics</h2>
@@ -185,7 +201,7 @@ const AdminDashboard: React.FC = () => {
             <div className="loading">Loading statistics...</div>
           )}
         </div>
-        
+
         <div className="orders-section">
           <h2>Recent Orders</h2>
           {isLoading ? (
@@ -219,3 +235,43 @@ const AdminDashboard: React.FC = () => {
                         <span className={`status ${order.paymentStatus}`}>
                           {order.paymentStatus}
                         </span>
+                      </td>
+                      <td>
+                        <span className={`status ${order.deliveryStatus}`}>
+                          {order.deliveryStatus}
+                        </span>
+                      </td>
+                      <td>{formatDate(order.createdAt)}</td>
+                      <td>
+                        <div className="action-buttons">
+                          {order.deliveryStatus === "undelivered" && (
+                            <button
+                              onClick={() =>
+                                handleUpdateDeliveryStatus(order._id)
+                              }
+                              className="deliver-btn"
+                            >
+                              Mark Delivered
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDeleteOrder(order._id)}
+                            className="delete-btn"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AdminDashboard;

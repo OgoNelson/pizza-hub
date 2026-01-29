@@ -1,57 +1,31 @@
 import React, { useState } from "react";
 import OrderForm from "./components/OrderForm";
 import OrderPreview from "./components/OrderPreview";
-import "./App.css";
-
-/* ================= TYPES ================= */
-
-type View = "form" | "preview";
-
-interface OrderData {
-  fullName: string;
-  phone: string;
-  email: string;
-  pizzaType: string;
-  pizzaSize: string;
-  quantity: number;
-  deliveryAddress: string;
-  unitPrice: number;
-  totalPrice: number;
-}
-
-/* ================= COMPONENT ================= */
+import type { OrderData } from "./types";
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<View>("form");
+  const [currentView, setCurrentView] = useState<"form" | "preview">("form");
   const [orderData, setOrderData] = useState<OrderData | null>(null);
 
-  const handleBackToForm = (): void => {
+  const handlePreview = (data: OrderData) => {
+    setOrderData(data);
+    setCurrentView("preview");
+  };
+
+  const handleBackToForm = () => {
     setCurrentView("form");
-    setOrderData(null);
   };
 
   return (
     <div className="app">
-      <header className="app-header">
-        <h1>Pizza Hub</h1>
-        <p>Order delicious pizzas with different sizes and toppings</p>
-      </header>
-
-      <main className="app-main">
-        {currentView === "form" && <OrderForm />}
-
-        {currentView === "preview" && orderData && (
-          <OrderPreview
-            orderData={orderData}
-            onProceed={() => console.log("Proceeding to payment...")}
-            onCancel={handleBackToForm}
-          />
-        )}
-      </main>
-
-      <footer className="app-footer">
-        <p>&copy; {new Date().getFullYear()} Pizza Hub. All rights reserved.</p>
-      </footer>
+      {currentView === "form" && <OrderForm onPreview={handlePreview} />}
+      {currentView === "preview" && orderData && (
+        <OrderPreview
+          orderData={orderData}
+          onProceed={() => {}}
+          onCancel={handleBackToForm}
+        />
+      )}
     </div>
   );
 };

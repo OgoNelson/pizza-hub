@@ -1,0 +1,149 @@
+.admin-dashboard {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  background-color: #ff6b35;
+  color: white;
+  padding: 15px 20px;
+  border-radius: 8px;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.logout-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.dashboard-content {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+}
+
+.stats-section {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.stat-card {
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card h3 {
+  margin: 0 0 10px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #007bff;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+}
+
+.orders-section {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.orders-table th,
+.orders-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.orders-table th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+}
+
+.status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.status.success {
+  background-color: #28a745;
+  color: white;
+}
+
+.status.failed {
+  background-color: #dc3545;
+  color: white;
+}
+
+.status.undelivered {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.status.delivered {
+  background-color: #28a745;
+  color: white;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 5px;
+}
+
+.deliver-btn {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.delete-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
