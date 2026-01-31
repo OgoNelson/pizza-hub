@@ -37,13 +37,18 @@ const PaymentCallback = () => {
           }
 
           const orderData = JSON.parse(orderDataString);
-          const { unitPrice, totalPrice, ...requiredOrderData } = orderData;
 
-          // Create order with payment reference
+          // Create order with payment reference - only send required fields
           const finalOrderData = {
-            ...requiredOrderData,
+            fullName: orderData.fullName,
+            phone: orderData.phone,
+            email: orderData.email,
+            pizzaType: orderData.pizzaType,
+            pizzaSize: orderData.pizzaSize,
+            quantity: orderData.quantity,
+            deliveryAddress: orderData.deliveryAddress,
             paymentReference: reference,
-            amountPaid: totalPrice,
+            amountPaid: orderData.totalPrice,
           };
 
           await paymentAPI.createOrder(finalOrderData);

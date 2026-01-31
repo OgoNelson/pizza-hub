@@ -11,8 +11,9 @@ const OrderSuccess = () => {
     navigate('/');
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString();
+  const formatCurrency = (amount) => {
+    if (!amount) return '₦0';
+    return `₦${Number(amount).toLocaleString()}`;
   };
 
   return (
@@ -38,6 +39,11 @@ const OrderSuccess = () => {
           </div>
 
           <div className="detail-row">
+            <span className="detail-label">Email:</span>
+            <span className="detail-value">{orderData?.email}</span>
+          </div>
+
+          <div className="detail-row">
             <span className="detail-label">Pizza:</span>
             <span className="detail-value">
               {orderData?.quantity}x {orderData?.pizzaType} ({orderData?.pizzaSize})
@@ -51,7 +57,10 @@ const OrderSuccess = () => {
 
           <div className="detail-row total">
             <span className="detail-label">Total Paid:</span>
-            <span className="detail-value">{orderData?.formattedTotal}</span>
+            <span className="detail-value">
+              {orderData?.totalPrice ? formatCurrency(orderData.totalPrice) :
+               orderData?.amountPaid ? formatCurrency(orderData.amountPaid) : 'N/A'}
+            </span>
           </div>
         </div>
 
