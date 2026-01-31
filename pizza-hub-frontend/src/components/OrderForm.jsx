@@ -56,6 +56,10 @@ const OrderForm = () => {
     setLoading(true);
     try {
       const response = await orderAPI.preview(formData);
+
+      // Save order data to session storage for payment callback
+      sessionStorage.setItem('pendingOrder', JSON.stringify(response.data));
+
       navigate('/preview', { state: { orderData: response.data } });
     } catch (error) {
       console.error('Error previewing order:', error);

@@ -1,6 +1,5 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { PaystackPop } from '@paystack/inline-js';
 import { paymentAPI } from '../services/api';
 import './OrderPreview.css';
 
@@ -23,47 +22,23 @@ const OrderPreview = () => {
     }
 
     try {
+      // Prepare payment data with only required fields
+      const paymentData = {
+        fullName: orderData.fullName,
+        phone: orderData.phone,
+        email: orderData.email,
+        pizzaType: orderData.pizzaType,
+        pizzaSize: orderData.pizzaSize,
+        quantity: orderData.quantity,
+        deliveryAddress: orderData.deliveryAddress,
+      };
+
       // Initialize payment
-      const initResponse = await paymentAPI.init(orderData);
+      const initResponse = await paymentAPI.init(paymentData);
       const { authorization_url, reference } = initResponse.data.data.data;
 
-      // Open Paystack popup
-      const popup = PaystackPop.setup({
-        key: paystackPublicKey,
-        email: orderData.email,
-        amount: orderData.totalPrice * 100, // Convert to kobo
-        reference: reference,
-        onClose: () => {
-          console.log('Payment closed');
-        },
-        callback: async (response) => {
-          try {
-            // Verify payment
-            await paymentAPI.verify(response.reference);
-
-            // Create order
-            const finalOrderData = {
-              ...orderData,
-              paymentReference: response.reference,
-              amountPaid: orderData.totalPrice,
-            };
-            await paymentAPI.createOrder(finalOrderData);
-
-            // Navigate to success page
-            navigate('/success', {
-              state: {
-                orderData: finalOrderData,
-                reference: response.reference,
-              },
-            });
-          } catch (error) {
-            console.error('Error processing payment:', error);
-            alert('Payment verification failed. Please contact support.');
-          }
-        },
-      });
-
-      popup.openIframe();
+      // Redirect to Paystack payment page
+      window.location.href = authorization_url;
     } catch (error) {
       console.error('Error initializing payment:', error);
       alert('Failed to initialize payment. Please try again.');
