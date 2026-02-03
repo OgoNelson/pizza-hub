@@ -54,10 +54,15 @@ export class PaymentService {
   async createOrderAfterPayment(orderData: CreateOrderDto) {
     try {
       const order = await this.orderService.createOrder(orderData);
-      
-      // Send order confirmation email
-      await this.emailService.sendOrderConfirmation(orderData);
-      
+
+      // Send order confirmation email with the complete order object
+      try {
+        await this.emailService.sendOrderConfirmation(order);
+      } catch (emailError) {
+        console.error('Failed to send order confirmation email:', emailError.message);
+        // Continue anyway - order is created successfully
+      }
+
       return order;
     } catch (error) {
       throw new Error(`Failed to create order: ${error.message}`);

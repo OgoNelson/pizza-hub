@@ -23,7 +23,7 @@ export class PaystackService {
         email,
         amount: amount * 100, // kobo
         reference,
-        callback_url: `${process.env.FRONTEND_URL}/payment/verify`,
+        callback_url: `${process.env.FRONTEND_URL}/callback`,
       },
       { headers: this.headers },
     );

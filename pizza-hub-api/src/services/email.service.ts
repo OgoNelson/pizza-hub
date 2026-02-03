@@ -7,29 +7,54 @@ export class EmailService {
   constructor(private readonly configService: ConfigService) {}
 
   async sendOrderConfirmation(orderData: any) {
+
+    const emailPort = parseInt(this.configService.get<string>('EMAIL_PORT') || '465');
+    const useSecure = emailPort === 465;
+
     const transporter = nodemailer.createTransport({
       host: this.configService.get<string>('EMAIL_HOST'),
-      port: 587,
-      secure: false,
+      port: emailPort,
+      secure: useSecure, // true for 465, false for 587
       auth: {
         user: this.configService.get<string>('EMAIL_USER'),
         pass: this.configService.get<string>('EMAIL_PASS'),
       },
+      tls: {
+        // Do not fail on invalid certs
+        rejectUnauthorized: false,
+      },
+      // Add connection settings
+      pool: true,
+      maxConnections: 1,
+      maxMessages: 5,
+      // Increase timeout
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
     });
 
     const mailOptions = {
-      from: this.configService.get<string>('EMAIL_USER'),
+      from: `"Pizza Hub" <${this.configService.get<string>('EMAIL_USER')}>`,
       to: orderData.email,
       subject: `Your Pizza Order Confirmation – ${orderData.paymentReference}`,
       html: this.generateOrderConfirmationEmail(orderData),
     };
 
     try {
-      await transporter.sendMail(mailOptions);
-      console.log('Order confirmation email sent successfully');
+      // Try to send email directly
+      const info = await transporter.sendMail(mailOptions);
+      return info;
     } catch (error) {
-      console.error('Error sending order confirmation email:', error);
-      throw new Error('Failed to send order confirmation email');
+      console.error('Error sending order confirmation email:', error.message);
+      console.error('Full error details:', {
+        code: error.code,
+        command: error.command,
+        response: error.response,
+      });
+
+      // Don't throw - just log the error so order creation continues
+      console.warn('Email failed but order was created successfully');
+      return null;
     }
   }
 
