@@ -1,50 +1,53 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
+import Brevo from '@getbrevo/brevo';
 
 @Injectable()
 export class EmailService {
-  constructor(private readonly configService: ConfigService) {}
+  private brevoClient: Brevo.TransactionalEmailsApi;
+
+  constructor(private readonly configService: ConfigService) {
+    // Initialize Brevo client
+    this.brevoClient = new Brevo.TransactionalEmailsApi();
+
+    // Get API key
+    const apiKey = this.configService.get<string>('BREVO_API_KEY');
+    if (!apiKey)
+      throw new Error('BREVO_API_KEY environment variable is not set');
+
+    this.brevoClient.setApiKey(
+      Brevo.TransactionalEmailsApiApiKeys.apiKey,
+      apiKey,
+    );
+
+    // Check sender email
+    const senderEmail = this.configService.get<string>('BREVO_SENDER_EMAIL');
+    if (!senderEmail)
+      throw new Error('BREVO_SENDER_EMAIL environment variable is not set');
+  }
 
   async sendOrderConfirmation(orderData: any) {
-
-    const emailPort = parseInt(this.configService.get<string>('EMAIL_PORT') || '465');
-    const useSecure = emailPort === 465;
-
-    const transporter = nodemailer.createTransport({
-      host: this.configService.get<string>('EMAIL_HOST'),
-      port: emailPort,
-      secure: useSecure, // true for 465, false for 587
-      auth: {
-        user: this.configService.get<string>('EMAIL_USER'),
-        pass: this.configService.get<string>('EMAIL_PASS'),
+    const emailData = {
+      sender: {
+        email: this.configService.get<string>('BREVO_SENDER_EMAIL'),
+        name: 'Pizza Hub',
       },
-      // Increase timeout
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 10000,
-    });
-
-    const mailOptions = {
-      from: `"Pizza Hub" <${this.configService.get<string>('EMAIL_USER')}>`,
-      to: orderData.email,
+      to: [
+        {
+          email: orderData.email,
+          name: orderData.fullName,
+        },
+      ],
       subject: `Your Pizza Order Confirmation – ${orderData.paymentReference}`,
-      html: this.generateOrderConfirmationEmail(orderData),
+      htmlContent: this.generateOrderConfirmationEmail(orderData),
     };
 
     try {
-      // Try to send email directly
-      const info = await transporter.sendMail(mailOptions);
-      return info;
+      const response = await this.brevoClient.sendTransacEmail(emailData);
+      console.log('Email sent successfully:', response);
+      return response;
     } catch (error) {
-      console.error('Error sending order confirmation email:', error.message);
-      console.error('Full error details:', {
-        code: error.code,
-        command: error.command,
-        response: error.response,
-      });
-
-      // Don't throw - just log the error so order creation continues
+      console.error('Error sending order confirmation email:', error);
       console.warn('Email failed but order was created successfully');
       return null;
     }
