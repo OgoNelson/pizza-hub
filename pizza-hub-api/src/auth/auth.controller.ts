@@ -8,8 +8,11 @@ export class AuthController {
   @Post('login')
   async login(@Body() loginDto: any) {
     try {
-      const admin = await this.authService.validateAdmin(loginDto.email, loginDto.password);
-      
+      const admin = await this.authService.validateAdmin(
+        loginDto.email,
+        loginDto.password,
+      );
+
       if (!admin) {
         return {
           statusCode: HttpStatus.UNAUTHORIZED,
@@ -18,7 +21,7 @@ export class AuthController {
       }
 
       const result = await this.authService.login(admin);
-      
+
       return {
         statusCode: HttpStatus.OK,
         message: 'Login successful',
@@ -33,26 +36,26 @@ export class AuthController {
     }
   }
 
-  @Post('create')
-  async createAdmin(@Body() createAdminDto: any) {
-    try {
-      const admin = await this.authService.createAdmin(createAdminDto);
-      
-      return {
-        statusCode: HttpStatus.CREATED,
-        message: 'Admin created successfully',
-        data: {
-          id: admin.id,
-          email: admin.email,
-          role: admin.role,
-        },
-      };
-    } catch (error) {
-      return {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: 'Admin creation failed',
-        error: error.message,
-      };
-    }
-  }
+  // @Post('create')
+  // async createAdmin(@Body() createAdminDto: any) {
+  //   try {
+  //     const admin = await this.authService.createAdmin(createAdminDto);
+
+  //     return {
+  //       statusCode: HttpStatus.CREATED,
+  //       message: 'Admin created successfully',
+  //       data: {
+  //         id: admin.id,
+  //         email: admin.email,
+  //         role: admin.role,
+  //       },
+  //     };
+  //   } catch (error) {
+  //     return {
+  //       statusCode: HttpStatus.BAD_REQUEST,
+  //       message: 'Admin creation failed',
+  //       error: error.message,
+  //     };
+  //   }
+  // }
 }

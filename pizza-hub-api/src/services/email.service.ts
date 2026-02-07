@@ -19,14 +19,6 @@ export class EmailService {
         user: this.configService.get<string>('EMAIL_USER'),
         pass: this.configService.get<string>('EMAIL_PASS'),
       },
-      tls: {
-        // Do not fail on invalid certs
-        rejectUnauthorized: false,
-      },
-      // Add connection settings
-      pool: true,
-      maxConnections: 1,
-      maxMessages: 5,
       // Increase timeout
       connectionTimeout: 10000,
       greetingTimeout: 10000,
