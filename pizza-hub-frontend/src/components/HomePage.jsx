@@ -1,6 +1,6 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import './HomePage.css';
+import React from "react";
+import { Link } from "react-router-dom";
+import "./HomePage.css";
 
 const HomePage = () => {
   return (
@@ -9,8 +9,12 @@ const HomePage = () => {
         <div className="nav-content">
           <h1 className="logo">🍕 Pizza Hub</h1>
           <div className="nav-links">
-            <Link to="/" className="nav-link">Home</Link>
-            <Link to="/admin/login" className="nav-link">Admin</Link>
+            <Link to="/" className="nav-link">
+              Home
+            </Link>
+            <Link to="/admin/login" className="nav-link">
+              Admin
+            </Link>
           </div>
         </div>
       </nav>
@@ -34,7 +38,9 @@ const HomePage = () => {
           <div className="feature-card">
             <div className="feature-icon">🍕</div>
             <h3>Fresh Ingredients</h3>
-            <p>We use only the freshest ingredients to make our delicious pizzas</p>
+            <p>
+              We use only the freshest ingredients to make our delicious pizzas
+            </p>
           </div>
 
           <div className="feature-card">
@@ -52,7 +58,9 @@ const HomePage = () => {
           <div className="feature-card">
             <div className="feature-icon">⭐</div>
             <h3>Quality Service</h3>
-            <p>Our team is dedicated to providing you with the best experience</p>
+            <p>
+              Our team is dedicated to providing you with the best experience
+            </p>
           </div>
         </div>
       </div>
@@ -109,8 +117,9 @@ const HomePage = () => {
 
       <footer className="footer">
         <div className="footer-content">
-          <p>&copy; 2024 Pizza Hub. All rights reserved.</p>
+          <p>&copy; 2026 Pizza Hub. All rights reserved.</p>
           <p>Delicious pizza delivered with love</p>
+          <p>Built by @ogo_nelson</p>
         </div>
       </footer>
     </div>
