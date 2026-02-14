@@ -1,125 +1,59 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import Brevo from '@getbrevo/brevo';
+import { TransactionalEmailsApi } from '@getbrevo/brevo';
 
 @Injectable()
 export class EmailService {
-  private brevoClient: Brevo.TransactionalEmailsApi;
+  private brevoClient: TransactionalEmailsApi;
 
   constructor(private readonly configService: ConfigService) {
-    // Initialize Brevo client
-    this.brevoClient = new Brevo.TransactionalEmailsApi();
+    this.brevoClient = new TransactionalEmailsApi();
 
-    // Get API key
     const apiKey = this.configService.get<string>('BREVO_API_KEY');
-    if (!apiKey)
+    if (!apiKey) {
       throw new Error('BREVO_API_KEY environment variable is not set');
+    }
 
-    this.brevoClient.setApiKey(
-      Brevo.TransactionalEmailsApiApiKeys.apiKey,
-      apiKey,
-    );
-
-    // Check sender email
-    const senderEmail = this.configService.get<string>('BREVO_SENDER_EMAIL');
-    if (!senderEmail)
-      throw new Error('BREVO_SENDER_EMAIL environment variable is not set');
+    // Set API Key properly
+    this.brevoClient.setApiKey(0, apiKey);
   }
 
   async sendOrderConfirmation(orderData: any) {
-    const emailData = {
-      sender: {
-        email: this.configService.get<string>('BREVO_SENDER_EMAIL'),
-        name: 'Pizza Hub',
-      },
-      to: [
-        {
-          email: orderData.email,
-          name: orderData.fullName,
-        },
-      ],
-      subject: `Your Pizza Order Confirmation – ${orderData.paymentReference}`,
-      htmlContent: this.generateOrderConfirmationEmail(orderData),
-    };
+    const senderEmail = this.configService.get<string>('BREVO_SENDER_EMAIL');
+    if (!senderEmail) {
+      throw new Error('BREVO_SENDER_EMAIL environment variable is not set');
+    }
 
     try {
-      const response = await this.brevoClient.sendTransacEmail(emailData);
-      console.log('Email sent successfully:', response);
+      const response = await this.brevoClient.sendTransacEmail({
+        sender: {
+          email: senderEmail,
+          name: 'Pizza Hub',
+        },
+        to: [
+          {
+            email: orderData.email,
+            name: orderData.fullName,
+          },
+        ],
+        subject: `Your Pizza Order Confirmation – ${orderData.paymentReference}`,
+        htmlContent: this.generateOrderConfirmationEmail(orderData),
+      });
+
+      console.log('Email sent successfully');
       return response;
     } catch (error) {
-      console.error('Error sending order confirmation email:', error);
-      console.warn('Email failed but order was created successfully');
+      console.error('Brevo email error:', error);
       return null;
     }
   }
 
   private generateOrderConfirmationEmail(orderData: any): string {
     return `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">Pizza Order Confirmation</h2>
-        <p>Thank you for your order! Here are your order details:</p>
-        
-        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #333; margin-top: 0;">Order Details</h3>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Order Reference:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${orderData.paymentReference}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Name:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${orderData.fullName}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Email:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${orderData.email}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Phone:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${orderData.phone}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Pizza Type:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${orderData.pizzaType}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Size:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${orderData.pizzaSize}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Quantity:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${orderData.quantity}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Unit Price:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">₦${orderData.unitPrice.toLocaleString()}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Total Price:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>₦${orderData.totalPrice.toLocaleString()}</strong></td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Delivery Address:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${orderData.deliveryAddress}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Payment Status:</strong></td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd; color: #28a745;"><strong>${orderData.paymentStatus.toUpperCase()}</strong></td>
-            </tr>
-          </table>
-        </div>
-        
-        <div style="background-color: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; color: white;">
-          <h3 style="color: white; margin-top: 0;">Next Steps</h3>
-          <p>Your order is being processed and will be delivered to:</p>
-          <p><strong>${orderData.deliveryAddress}</strong></p>
-          <p>You will receive another notification when your order is out for delivery.</p>
-        </div>
-        
-        <div style="text-align: center; margin-top: 30px; color: #666;">
-          <p style="font-size: 12px;">Thank you for choosing Pizza Hub! 🍕</p>
-        </div>
-      </div>
+      <h2>Order Confirmation</h2>
+      <p>Thank you ${orderData.fullName}!</p>
+      <p>Reference: ${orderData.paymentReference}</p>
+      <p>Total: ₦${orderData.totalPrice}</p>
     `;
   }
 }
